@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL101 — Taxes Team</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #ff4d6d;
+    --accent2: #00e5ff;
+    --accent3: #b8ff57;
+    --text: #e8e8f0;
+    --muted: #6b6b85;
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(20px);
+  }
+
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent2);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent2); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 140px 40px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
+  }
+
+  .hero-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .hero h1 {
+    font-size: clamp(64px, 10vw, 140px);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.03em;
+    margin-bottom: 32px;
+    position: relative;
+  }
+
+  .hero h1 span.highlight {
+    -webkit-text-stroke: 2px var(--accent2);
+    color: transparent;
+  }
+
+  .hero-sub {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    background: var(--accent2);
+    color: var(--bg);
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 700;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .btn-primary:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0 var(--accent);
+  }
+
+  .btn-secondary {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .hero-stat-row {
+    position: absolute;
+    bottom: 48px;
+    right: 40px;
+    display: flex;
+    gap: 48px;
+  }
+
+  .hero-stat {
+    text-align: right;
+  }
+
+  .hero-stat-num {
+    font-family: var(--mono);
+    font-size: 32px;
+    color: var(--accent3);
+    font-weight: 700;
+  }
+
+  .hero-stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* SECTION COMMONS */
+  section {
+    padding: 100px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .section-title {
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    margin-bottom: 60px;
+  }
+
+  /* CONCEPTS GRID */
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+
+  .concept-card {
+    background: var(--card);
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+    cursor: default;
+  }
+
+  .concept-card:hover {
+    background: #1c1c28;
+  }
+
+  .concept-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 0;
+    background: var(--accent2);
+    transition: height 0.3s;
+  }
+
+  .concept-card:hover::after { height: 100%; }
+
+  .concept-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+  }
+
+  .concept-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .concept-title .kw {
+    color: var(--accent2);
+    font-family: var(--mono);
+    font-size: 15px;
+  }
+
+  .concept-desc {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+
+  .concept-tag {
+    display: inline-block;
+    margin-top: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    background: rgba(0,229,255,0.08);
+    color: var(--accent2);
+    border: 1px solid rgba(0,229,255,0.2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* SQL CHEATSHEET */
+  .cheatsheet {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .cheat-header {
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .cheat-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cheat-item {
+    padding: 28px 32px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cheat-kw {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .cheat-question {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .cheat-note {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .cheat-code {
+    font-family: var(--mono);
+    font-size: 11px;
+    background: rgba(255,77,109,0.08);
+    border: 1px solid rgba(255,77,109,0.2);
+    padding: 8px 12px;
+    margin-top: 10px;
+    color: var(--accent3);
+    border-radius: 2px;
+    display: block;
+  }
+
+  /* FLASHCARDS SECTION */
+  #flashcards {
+    max-width: 1200px;
+  }
+
+  .flashcard-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .fc-progress {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .fc-progress span {
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  .fc-score {
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-left: auto;
+    color: var(--muted);
+  }
+
+  .fc-score .correct { color: var(--accent3); }
+  .fc-score .incorrect { color: var(--accent); }
+
+  .btn-reset {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* FLASHCARD COMPONENT */
+  .flashcard-area {
+    perspective: 1200px;
+    margin-bottom: 32px;
+  }
+
+  .flashcard {
+    width: 100%;
+    min-height: 320px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .flashcard.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .fc-front, .fc-back {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 48px;
+    text-align: center;
+    min-height: 320px;
+  }
+
+  .fc-front {
+    background: var(--card);
+  }
+
+  .fc-back {
+    background: var(--surface);
+    transform: rotateY(180deg);
+    border-color: var(--accent2);
+  }
+
+  .fc-category {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    padding: 4px 12px;
+    border: 1px solid rgba(255,77,109,0.3);
+  }
+
+  .fc-question {
+    font-size: clamp(18px, 3vw, 28px);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+    max-width: 600px;
+  }
+
+  .fc-hint {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .fc-hint::before {
+    content: '↻';
+    color: var(--accent2);
+  }
+
+  .fc-answer-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent2);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .fc-answer {
+    font-size: clamp(15px, 2.5vw, 20px);
+    font-weight: 400;
+    line-height: 1.6;
+    color: var(--text);
+    max-width: 640px;
+  }
+
+  .fc-answer code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    color: var(--accent3);
+    background: rgba(184,255,87,0.08);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .fc-nav {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-nav {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px 24px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-nav:hover:not(:disabled) {
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .btn-nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  .btn-correct {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px 24px;
+    border: 1px solid var(--accent3);
+    background: rgba(184,255,87,0.1);
+    color: var(--accent3);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-correct:hover {
+    background: rgba(184,255,87,0.2);
+  }
+
+  .btn-incorrect {
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 12px 24px;
+    border: 1px solid var(--accent);
+    background: rgba(255,77,109,0.1);
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+
+  .btn-incorrect:hover {
+    background: rgba(255,77,109,0.2);
+  }
+
+  .progress-bar-outer {
+    width: 100%;
+    height: 2px;
+    background: var(--border);
+    margin-bottom: 40px;
+  }
+
+  .progress-bar-inner {
+    height: 100%;
+    background: var(--accent2);
+    transition: width 0.4s ease;
+  }
+
+  /* CARD DOTS */
+  .fc-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .fc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.2s;
+  }
+
+  .fc-dot.active { background: var(--accent2); }
+  .fc-dot.correct { background: var(--accent3); }
+  .fc-dot.incorrect { background: var(--accent); }
+
+  /* SCORE RESULT */
+  .score-result {
+    display: none;
+    text-align: center;
+    padding: 80px 40px;
+    border: 1px solid var(--border);
+    background: var(--card);
+  }
+
+  .score-result.visible { display: block; }
+
+  .score-big {
+    font-family: var(--mono);
+    font-size: 80px;
+    font-weight: 700;
+    color: var(--accent3);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+
+  .score-label {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .score-sub {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 100%;
+  }
+
+  footer p {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .footer-accent {
+    color: var(--accent2);
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 40px;
+  }
+
+  /* ANIMATE IN */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero h1 { animation: fadeUp 0.7s 0.1s both; }
+  .hero-tag { animation: fadeUp 0.7s 0s both; }
+  .hero-sub { animation: fadeUp 0.7s 0.2s both; }
+  .hero-ctas { animation: fadeUp 0.7s 0.3s both; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    section { padding: 60px 20px; }
+    .hero { padding: 120px 20px 60px; }
+    .cheat-body { grid-template-columns: 1fr; }
+    .hero-stat-row { position: relative; bottom: auto; right: auto; flex-direction: row; margin-top: 48px; }
+    footer { flex-direction: column; gap: 12px; padding: 32px 20px; text-align: center; }
+    .divider { margin: 0 20px; }
+    .fc-front, .fc-back { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">SQL101 // Taxes Team</div>
+  <ul class="nav-links">
+    <li><a href="#conceptos">Conceptos</a></li>
+    <li><a href="#sql">SQL Básico</a></li>
+    <li><a href="#flashcards">Flashcards</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-tag">DuckDB · EDA · Taxes Team</div>
+  <h1>SQL<br><span class="highlight">101</span></h1>
+  <p class="hero-sub">
+    Consultas exploratorias y validaciones de calidad sobre datos raw del cliente. Rápido, consistente, auditable.
+  </p>
+  <div class="hero-ctas">
+    <a href="#conceptos" class="btn-primary">Empezar →</a>
+    <a href="#flashcards" class="btn-secondary">Ir a Flashcards</a>
+  </div>
+  <div class="hero-stat-row">
+    <div class="hero-stat">
+      <div class="hero-stat-num">4</div>
+      <div class="hero-stat-label">Keywords SQL</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">3</div>
+      <div class="hero-stat-label">Tipos de Relación</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-num">12</div>
+      <div class="hero-stat-label">Flashcards</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- CONCEPTOS -->
+<section id="conceptos">
+  <div class="section-label">Módulo 01</div>
+  <h2 class="section-title">ABC de<br>Bases de Datos</h2>
+
+  <div class="concepts-grid">
+    <div class="concept-card">
+      <div class="concept-num">01 —</div>
+      <div class="concept-title"><span class="kw">Tabla</span></div>
+      <div class="concept-desc">Contenedor para un solo tipo de entidad (ej: solo Doctores). Organiza la info en filas y columnas. Bloque base de cualquier DB relacional.</div>
+      <span class="concept-tag">estructura</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">02 —</div>
+      <div class="concept-title"><span class="kw">Atributo</span> / Columna</div>
+      <div class="concept-desc">Propiedad de la entidad. Regla de oro: todas las filas de una columna deben tener el mismo tipo de dato.</div>
+      <span class="concept-tag">estructura</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">03 —</div>
+      <div class="concept-title"><span class="kw">Fila</span> / Registro</div>
+      <div class="concept-desc">Cada fila es un objeto individual y único. Si la tabla es de Doctores, cada fila es un doctor específico.</div>
+      <span class="concept-tag">estructura</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">04 —</div>
+      <div class="concept-title"><span class="kw">Primary Key</span></div>
+      <div class="concept-desc">El DNI del registro. Garantiza unicidad por fila. Nunca puede ser NULL. No pueden existir dos filas con el mismo valor.</div>
+      <span class="concept-tag">llave</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">05 —</div>
+      <div class="concept-title"><span class="kw">Foreign Key</span></div>
+      <div class="concept-desc">Columna que apunta a la Primary Key de otra tabla. Permite relacionar info sin duplicarla. Es el "ancla" para hacer JOINs.</div>
+      <span class="concept-tag">llave</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">06 —</div>
+      <div class="concept-title"><span class="kw">Schema</span></div>
+      <div class="concept-desc">La estructura completa de la base de datos: el conjunto de tablas, sus columnas y las relaciones entre ellas.</div>
+      <span class="concept-tag">arquitectura</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">07 —</div>
+      <div class="concept-title">Relación <span class="kw">1:1</span></div>
+      <div class="concept-desc">Un registro de A ↔ un registro de B. Ej: Paciente y su Expediente Clínico. Usualmente comparten Primary Key.</div>
+      <span class="concept-tag">relación</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">08 —</div>
+      <div class="concept-title">Relación <span class="kw">1:N</span></div>
+      <div class="concept-desc">Un registro de A → muchos de B. Ej: Hospital tiene muchos Doctores. La PK del Hospital se guarda como FK en Doctores.</div>
+      <span class="concept-tag">relación · más común</span>
+    </div>
+    <div class="concept-card">
+      <div class="concept-num">09 —</div>
+      <div class="concept-title">Relación <span class="kw">N:N</span></div>
+      <div class="concept-desc">Muchos de A ↔ muchos de B. Se resuelve con una tabla intermedia (Join Table). Ej: Pacientes ↔ Doctores via Appointments.</div>
+      <span class="concept-tag">relación</span>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- SQL CHEATSHEET -->
+<section id="sql">
+  <div class="section-label">Módulo 02</div>
+  <h2 class="section-title">ABC de<br>SQL</h2>
+
+  <div class="cheatsheet">
+    <div class="cheat-header">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+    </div>
+    <div class="cheat-body">
+      <div class="cheat-item">
+        <div class="cheat-kw">SELECT</div>
+        <div class="cheat-question">¿Qué columnas quiero?</div>
+        <div class="cheat-note">Define qué campos te interesan. Usa <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">*</code> para todo (cuidado con raw grandes). Alias con <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">AS</code> para renombrar columnas.</div>
+        <code class="cheat-code">SELECT first_name, specialty AS especialidad</code>
+      </div>
+      <div class="cheat-item">
+        <div class="cheat-kw">FROM</div>
+        <div class="cheat-question">¿De dónde vienen los datos?</div>
+        <div class="cheat-note">Especifica la tabla o archivo. En DuckDB puedes leer CSVs directamente sin importar primero.</div>
+        <code class="cheat-code">FROM 'data/raw/clientes.csv'</code>
+      </div>
+      <div class="cheat-item">
+        <div class="cheat-kw">WHERE</div>
+        <div class="cheat-question">¿Qué filas me interesan?</div>
+        <div class="cheat-note">Es el filtro. Operadores: <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">=  &lt;&gt;  &gt;  &lt;  LIKE  IN</code>. Solo verás registros que pasen esta prueba.</div>
+        <code class="cheat-code">WHERE age &gt; 30 AND specialty = 'Cardio'</code>
+      </div>
+      <div class="cheat-item">
+        <div class="cheat-kw">COUNT()</div>
+        <div class="cheat-question">¿Cuántos registros hay?</div>
+        <div class="cheat-note"><code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">COUNT(*)</code> cuenta todo (incluye nulls). <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">COUNT(col)</code> solo donde no es NULL — útil para detectar datos faltantes.</div>
+        <code class="cheat-code">SELECT COUNT(*), COUNT(email) FROM doctors</code>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- FLASHCARDS -->
+<section id="flashcards" style="max-width:1200px">
+  <div class="section-label">Módulo 03</div>
+  <h2 class="section-title">Flashcards<br><span style="color:var(--accent2);">¿Cuánto sabes?</span></h2>
+
+  <div class="flashcard-controls">
+    <div class="fc-progress">Carta <span id="current-num">1</span> de <span id="total-num">12</span></div>
+    <div class="fc-score">
+      <span class="correct" id="correct-count">0</span> correctas &nbsp;/&nbsp;
+      <span class="incorrect" id="incorrect-count">0</span> incorrectas
+    </div>
+    <button class="btn-reset" onclick="resetCards()">↺ Reiniciar</button>
+  </div>
+
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="progress-bar" style="width:8.33%"></div>
+  </div>
+
+  <!-- FLASHCARD -->
+  <div class="flashcard-area" id="fc-area">
+    <div class="flashcard" id="flashcard" onclick="flipCard()">
+      <div class="fc-front">
+        <div class="fc-category" id="fc-cat"></div>
+        <div class="fc-question" id="fc-question"></div>
+        <div class="fc-hint">Clic para ver la respuesta</div>
+      </div>
+      <div class="fc-back">
+        <div class="fc-answer-label">RESPUESTA</div>
+        <div class="fc-answer" id="fc-answer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE RESULT -->
+  <div class="score-result" id="score-result">
+    <div class="score-big" id="score-pct">—</div>
+    <div class="score-label" id="score-title">—</div>
+    <div class="score-sub" id="score-sub">—</div>
+    <button class="btn-primary" onclick="resetCards()" style="margin-top:8px">↺ Repetir todo</button>
+  </div>
+
+  <div class="fc-nav" id="fc-nav">
+    <button class="btn-nav" id="btn-prev" onclick="prevCard()">← Anterior</button>
+    <button class="btn-incorrect" id="btn-incorrect" onclick="markCard(false)" style="display:none">✗ No sabía</button>
+    <button class="btn-correct" id="btn-correct" onclick="markCard(true)" style="display:none">✓ Lo supe</button>
+    <button class="btn-nav" id="btn-next" onclick="nextCard()">Siguiente →</button>
+  </div>
+
+  <div class="fc-dots" id="fc-dots"></div>
+</section>
+
+<hr class="divider">
+<footer>
+  <p>SQL101 <span class="footer-accent">// Taxes Team</span></p>
+  <p>DuckDB · EDA · 2025</p>
+</footer>
+
+<script>
+const cards = [
+  {
+    cat: "Fundamentos",
+    q: "¿Qué es una tabla en una base de datos?",
+    a: "Un contenedor para un solo tipo de entidad, organizado en filas y columnas. Es el bloque básico de cualquier base de datos relacional."
+  },
+  {
+    cat: "Fundamentos",
+    q: "¿Cuál es la regla de oro de las columnas?",
+    a: "Todas las filas de una misma columna deben tener el mismo tipo de dato. No puede haber un nombre en la columna <code>fecha_nacimiento</code>."
+  },
+  {
+    cat: "Fundamentos",
+    q: "¿Qué representa cada fila de una tabla?",
+    a: "Un objeto individual y único. Si la tabla es de Doctores, cada fila es un doctor específico."
+  },
+  {
+    cat: "Llaves",
+    q: "¿Qué es una Primary Key y cuáles son sus reglas?",
+    a: "Es el identificador único de cada registro (como un DNI). Nunca puede haber dos filas con la misma PK y nunca puede ser <code>NULL</code>."
+  },
+  {
+    cat: "Llaves",
+    q: "¿Para qué sirve una Foreign Key?",
+    a: "Crea un vínculo entre dos tablas apuntando a la Primary Key de otra tabla. Permite relacionar información sin duplicarla y es el ancla para hacer <code>JOIN</code>s."
+  },
+  {
+    cat: "Relaciones",
+    q: "Explica una relación 1:N. ¿Cuál es la más común?",
+    a: "Un registro de A puede tener muchos registros en B, pero cada registro de B solo pertenece a uno de A. Ej: Hospital → Doctores. Es la más común. La PK del Hospital va como FK en Doctores."
+  },
+  {
+    cat: "Relaciones",
+    q: "¿Cómo se resuelve una relación N:N?",
+    a: "Con una tabla intermedia (Join Table). Ej: Pacientes y Doctores no pueden tener FK mutuamente, entonces creamos una tabla <code>Appointments</code>."
+  },
+  {
+    cat: "Relaciones",
+    q: "¿Qué caracteriza una relación 1:1?",
+    a: "Un registro de la Tabla A se relaciona con solo uno de la Tabla B. Ej: Paciente y su Expediente Clínico. Generalmente comparten la misma Primary Key."
+  },
+  {
+    cat: "SQL",
+    q: "¿Qué hace <code>SELECT *</code> y cuándo hay que tener cuidado?",
+    a: "Trae todas las columnas de la tabla. Hay que usarlo con cuidado en archivos raw muy grandes porque puede ser costoso en tiempo y memoria."
+  },
+  {
+    cat: "SQL",
+    q: "¿Cómo se renombra una columna en el resultado de una consulta?",
+    a: "Con la palabra clave <code>AS</code>. Ejemplo: <code>SELECT specialty AS especialidad</code> — el alias solo afecta el nombre en el reporte, no la tabla original."
+  },
+  {
+    cat: "SQL",
+    q: "¿Cuál es la diferencia entre <code>COUNT(*)</code> y <code>COUNT(columna)</code>?",
+    a: "<code>COUNT(*)</code> cuenta todas las filas incluyendo nulos (total del dataset). <code>COUNT(columna)</code> solo cuenta filas donde esa columna no es NULL — útil para detectar datos faltantes."
+  },
+  {
+    cat: "DuckDB",
+    q: "¿Qué ventaja ofrece DuckDB con archivos CSV para EDA?",
+    a: "Puedes usar <code>FROM 'data/raw/clientes.csv'</code> directamente sin importar el archivo a una base de datos primero, lo que acelera mucho la exploración de datos raw del cliente."
+  }
+];
+
+let current = 0;
+let flipped = false;
+let results = new Array(cards.length).fill(null); // null = no vista, true = correcta, false = incorrecta
+
+function renderDots() {
+  const dots = document.getElementById('fc-dots');
+  dots.innerHTML = '';
+  cards.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'fc-dot';
+    if (i === current) d.classList.add('active');
+    if (results[i] === true) d.classList.add('correct');
+    if (results[i] === false) d.classList.add('incorrect');
+    dots.appendChild(d);
+  });
+}
+
+function loadCard(idx) {
+  const card = cards[idx];
+  document.getElementById('fc-cat').textContent = card.cat;
+  document.getElementById('fc-question').innerHTML = card.q;
+  document.getElementById('fc-answer').innerHTML = card.a;
+
+  // Reset flip
+  const fc = document.getElementById('flashcard');
+  fc.classList.remove('flipped');
+  flipped = false;
+
+  // Update controls
+  document.getElementById('current-num').textContent = idx + 1;
+  document.getElementById('total-num').textContent = cards.length;
+
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-incorrect').style.display = 'none';
+  document.getElementById('btn-correct').style.display = 'none';
+
+  // Progress bar
+  const pct = ((idx + 1) / cards.length) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+
+  renderDots();
+  updateScore();
+}
+
+function flipCard() {
+  const fc = document.getElementById('flashcard');
+  if (!flipped) {
+    fc.classList.add('flipped');
+    flipped = true;
+    document.getElementById('btn-incorrect').style.display = 'inline-block';
+    document.getElementById('btn-correct').style.display = 'inline-block';
+  } else {
+    fc.classList.remove('flipped');
+    flipped = false;
+    document.getElementById('btn-incorrect').style.display = 'none';
+    document.getElementById('btn-correct').style.display = 'none';
+  }
+}
+
+function nextCard() {
+  if (current < cards.length - 1) {
+    current++;
+    loadCard(current);
+  }
+}
+
+function prevCard() {
+  if (current > 0) {
+    current--;
+    loadCard(current);
+  }
+}
+
+function markCard(correct) {
+  results[current] = correct;
+  renderDots();
+  updateScore();
+
+  const answered = results.filter(r => r !== null).length;
+  if (answered === cards.length) {
+    showResult();
+    return;
+  }
+
+  if (current < cards.length - 1) {
+    setTimeout(() => { current++; loadCard(current); }, 300);
+  }
+}
+
+function updateScore() {
+  const correct = results.filter(r => r === true).length;
+  const incorrect = results.filter(r => r === false).length;
+  document.getElementById('correct-count').textContent = correct;
+  document.getElementById('incorrect-count').textContent = incorrect;
+}
+
+function showResult() {
+  document.getElementById('fc-area').style.display = 'none';
+  document.getElementById('fc-nav').style.display = 'none';
+  document.getElementById('fc-dots').style.display = 'none';
+
+  const correct = results.filter(r => r === true).length;
+  const pct = Math.round((correct / cards.length) * 100);
+
+  let title, sub;
+  if (pct === 100) { title = '¡Perfecto! 🎯'; sub = 'Dominas todos los conceptos. El equipo de Taxes está en buenas manos.'; }
+  else if (pct >= 75) { title = '¡Muy bien! 💪'; sub = 'Sólido conocimiento. Repasa las que fallaste y las tendrás dominadas.'; }
+  else if (pct >= 50) { title = 'Buen avance 📈'; sub = 'Tienes la base. Vale la pena releer el material y volver a intentarlo.'; }
+  else { title = 'Sigue practicando 🔁'; sub = 'No te rajes. Repasa el módulo y dale otra vuelta a las flashcards.'; }
+
+  document.getElementById('score-pct').textContent = pct + '%';
+  document.getElementById('score-title').textContent = title;
+  document.getElementById('score-sub').textContent = sub;
+  document.getElementById('score-result').classList.add('visible');
+}
+
+function resetCards() {
+  results = new Array(cards.length).fill(null);
+  current = 0;
+
+  document.getElementById('fc-area').style.display = 'block';
+  document.getElementById('fc-nav').style.display = 'flex';
+  document.getElementById('fc-dots').style.display = 'flex';
+  document.getElementById('score-result').classList.remove('visible');
+
+  loadCard(0);
+}
+
+// Init
+loadCard(0);
+</script>
+</body>
+</html>
