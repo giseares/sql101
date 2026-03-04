@@ -4,1134 +4,1205 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SQL101 — Taxes Team</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Clash+Display:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- sql.js for in-browser SQL execution -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/sql-wasm.js"></script>
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --surface: #111118;
-    --card: #16161f;
-    --border: #2a2a3a;
-    --accent: #ff4d6d;
-    --accent2: #00e5ff;
-    --accent3: #b8ff57;
-    --text: #e8e8f0;
-    --muted: #6b6b85;
-    --mono: 'Space Mono', monospace;
-    --sans: 'Syne', sans-serif;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    overflow-x: hidden;
-  }
-
-  /* NOISE OVERLAY */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 999;
-    opacity: 0.4;
-  }
-
-  /* NAV */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    padding: 20px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-    background: rgba(10,10,15,0.85);
-    backdrop-filter: blur(20px);
-  }
-
-  .nav-logo {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--accent2);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 32px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    text-decoration: none;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: color 0.2s;
-  }
-
-  .nav-links a:hover { color: var(--accent2); }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 140px 40px 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero-grid {
-    position: absolute;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black, transparent);
-  }
-
-  .hero-tag {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .hero-tag::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: var(--accent);
-  }
-
-  .hero h1 {
-    font-size: clamp(64px, 10vw, 140px);
-    font-weight: 800;
-    line-height: 0.9;
-    letter-spacing: -0.03em;
-    margin-bottom: 32px;
-    position: relative;
-  }
-
-  .hero h1 span.highlight {
-    -webkit-text-stroke: 2px var(--accent2);
-    color: transparent;
-  }
-
-  .hero-sub {
-    font-family: var(--mono);
-    font-size: 14px;
-    color: var(--muted);
-    max-width: 480px;
-    line-height: 1.8;
-    margin-bottom: 48px;
-  }
-
-  .hero-ctas {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .btn-primary {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 14px 28px;
-    background: var(--accent2);
-    color: var(--bg);
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    font-weight: 700;
-    transition: transform 0.15s, box-shadow 0.15s;
-  }
-
-  .btn-primary:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 4px 4px 0 var(--accent);
-  }
-
-  .btn-secondary {
-    font-family: var(--mono);
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 14px 28px;
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-block;
-    transition: border-color 0.2s, color 0.2s;
-  }
-
-  .btn-secondary:hover {
-    border-color: var(--accent2);
-    color: var(--accent2);
-  }
-
-  .hero-stat-row {
-    position: absolute;
-    bottom: 48px;
-    right: 40px;
-    display: flex;
-    gap: 48px;
-  }
-
-  .hero-stat {
-    text-align: right;
-  }
-
-  .hero-stat-num {
-    font-family: var(--mono);
-    font-size: 32px;
-    color: var(--accent3);
-    font-weight: 700;
-  }
-
-  .hero-stat-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-  }
-
-  /* SECTION COMMONS */
-  section {
-    padding: 100px 40px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .section-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--accent);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-label::before {
-    content: '';
-    width: 24px;
-    height: 1px;
-    background: var(--accent);
-  }
-
-  .section-title {
-    font-size: clamp(32px, 4vw, 52px);
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.05;
-    margin-bottom: 60px;
-  }
-
-  /* CONCEPTS GRID */
-  .concepts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-  }
-
-  .concept-card {
-    background: var(--card);
-    padding: 36px 32px;
-    position: relative;
-    overflow: hidden;
-    transition: background 0.2s;
-    cursor: default;
-  }
-
-  .concept-card:hover {
-    background: #1c1c28;
-  }
-
-  .concept-card::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0;
-    width: 3px;
-    height: 0;
-    background: var(--accent2);
-    transition: height 0.3s;
-  }
-
-  .concept-card:hover::after { height: 100%; }
-
-  .concept-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 16px;
-    letter-spacing: 0.1em;
-  }
-
-  .concept-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
-
-  .concept-title .kw {
-    color: var(--accent2);
-    font-family: var(--mono);
-    font-size: 15px;
-  }
-
-  .concept-desc {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
-
-  .concept-tag {
-    display: inline-block;
-    margin-top: 16px;
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 4px 10px;
-    background: rgba(0,229,255,0.08);
-    color: var(--accent2);
-    border: 1px solid rgba(0,229,255,0.2);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  /* SQL CHEATSHEET */
-  .cheatsheet {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .cheat-header {
-    padding: 20px 32px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot-r { background: #ff5f57; }
-  .dot-y { background: #febc2e; }
-  .dot-g { background: #28c840; }
-
-  .cheat-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .cheat-item {
-    padding: 28px 32px;
-    border-right: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .cheat-kw {
-    font-family: var(--mono);
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-
-  .cheat-question {
-    font-size: 14px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: var(--text);
-  }
-
-  .cheat-note {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.7;
-  }
-
-  .cheat-code {
-    font-family: var(--mono);
-    font-size: 11px;
-    background: rgba(255,77,109,0.08);
-    border: 1px solid rgba(255,77,109,0.2);
-    padding: 8px 12px;
-    margin-top: 10px;
-    color: var(--accent3);
-    border-radius: 2px;
-    display: block;
-  }
-
-  /* FLASHCARDS SECTION */
-  #flashcards {
-    max-width: 1200px;
-  }
-
-  .flashcard-controls {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    margin-bottom: 40px;
-    flex-wrap: wrap;
-  }
-
-  .fc-progress {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-  }
-
-  .fc-progress span {
-    color: var(--accent2);
-    font-weight: 700;
-  }
-
-  .fc-score {
-    font-family: var(--mono);
-    font-size: 12px;
-    margin-left: auto;
-    color: var(--muted);
-  }
-
-  .fc-score .correct { color: var(--accent3); }
-  .fc-score .incorrect { color: var(--accent); }
-
-  .btn-reset {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    padding: 8px 16px;
-    background: transparent;
-    color: var(--muted);
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .btn-reset:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* FLASHCARD COMPONENT */
-  .flashcard-area {
-    perspective: 1200px;
-    margin-bottom: 32px;
-  }
-
-  .flashcard {
-    width: 100%;
-    min-height: 320px;
-    position: relative;
-    transform-style: preserve-3d;
-    transition: transform 0.55s cubic-bezier(0.4, 0.2, 0.2, 1);
-    cursor: pointer;
-  }
-
-  .flashcard.flipped {
-    transform: rotateY(180deg);
-  }
-
-  .fc-front, .fc-back {
-    position: absolute;
-    inset: 0;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 48px;
-    text-align: center;
-    min-height: 320px;
-  }
-
-  .fc-front {
-    background: var(--card);
-  }
-
-  .fc-back {
-    background: var(--surface);
-    transform: rotateY(180deg);
-    border-color: var(--accent2);
-  }
-
-  .fc-category {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 20px;
-    padding: 4px 12px;
-    border: 1px solid rgba(255,77,109,0.3);
-  }
-
-  .fc-question {
-    font-size: clamp(18px, 3vw, 28px);
-    font-weight: 700;
-    line-height: 1.3;
-    color: var(--text);
-    max-width: 600px;
-  }
-
-  .fc-hint {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 24px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .fc-hint::before {
-    content: '↻';
-    color: var(--accent2);
-  }
-
-  .fc-answer-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--accent2);
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .fc-answer {
-    font-size: clamp(15px, 2.5vw, 20px);
-    font-weight: 400;
-    line-height: 1.6;
-    color: var(--text);
-    max-width: 640px;
-  }
-
-  .fc-answer code {
-    font-family: var(--mono);
-    font-size: 0.85em;
-    color: var(--accent3);
-    background: rgba(184,255,87,0.08);
-    padding: 2px 6px;
-    border-radius: 2px;
-  }
-
-  .fc-nav {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .btn-nav {
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 12px 24px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn-nav:hover:not(:disabled) {
-    border-color: var(--accent2);
-    color: var(--accent2);
-  }
-
-  .btn-nav:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-  }
-
-  .btn-correct {
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 12px 24px;
-    border: 1px solid var(--accent3);
-    background: rgba(184,255,87,0.1);
-    color: var(--accent3);
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: all 0.2s;
-  }
-
-  .btn-correct:hover {
-    background: rgba(184,255,87,0.2);
-  }
-
-  .btn-incorrect {
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 12px 24px;
-    border: 1px solid var(--accent);
-    background: rgba(255,77,109,0.1);
-    color: var(--accent);
-    cursor: pointer;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: all 0.2s;
-  }
-
-  .btn-incorrect:hover {
-    background: rgba(255,77,109,0.2);
-  }
-
-  .progress-bar-outer {
-    width: 100%;
-    height: 2px;
-    background: var(--border);
-    margin-bottom: 40px;
-  }
-
-  .progress-bar-inner {
-    height: 100%;
-    background: var(--accent2);
-    transition: width 0.4s ease;
-  }
-
-  /* CARD DOTS */
-  .fc-dots {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-    margin-top: 20px;
-    flex-wrap: wrap;
-  }
-
-  .fc-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-    transition: background 0.2s;
-  }
-
-  .fc-dot.active { background: var(--accent2); }
-  .fc-dot.correct { background: var(--accent3); }
-  .fc-dot.incorrect { background: var(--accent); }
-
-  /* SCORE RESULT */
-  .score-result {
-    display: none;
-    text-align: center;
-    padding: 80px 40px;
-    border: 1px solid var(--border);
-    background: var(--card);
-  }
-
-  .score-result.visible { display: block; }
-
-  .score-big {
-    font-family: var(--mono);
-    font-size: 80px;
-    font-weight: 700;
-    color: var(--accent3);
-    line-height: 1;
-    margin-bottom: 16px;
-  }
-
-  .score-label {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .score-sub {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 32px;
-  }
-
-  /* FOOTER */
-  footer {
-    border-top: 1px solid var(--border);
-    padding: 40px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 100%;
-  }
-
-  footer p {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.1em;
-  }
-
-  .footer-accent {
-    color: var(--accent2);
-  }
-
-  /* DIVIDER */
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 0 40px;
-  }
-
-  /* ANIMATE IN */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .hero h1 { animation: fadeUp 0.7s 0.1s both; }
-  .hero-tag { animation: fadeUp 0.7s 0s both; }
-  .hero-sub { animation: fadeUp 0.7s 0.2s both; }
-  .hero-ctas { animation: fadeUp 0.7s 0.3s both; }
-
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    nav { padding: 16px 20px; }
-    .nav-links { display: none; }
-    section { padding: 60px 20px; }
-    .hero { padding: 120px 20px 60px; }
-    .cheat-body { grid-template-columns: 1fr; }
-    .hero-stat-row { position: relative; bottom: auto; right: auto; flex-direction: row; margin-top: 48px; }
-    footer { flex-direction: column; gap: 12px; padding: 32px 20px; text-align: center; }
-    .divider { margin: 0 20px; }
-    .fc-front, .fc-back { padding: 32px 24px; }
-  }
+:root {
+  --bg: #f5f2eb;
+  --ink: #1a1a14;
+  --surface: #ede9e0;
+  --card: #ffffff;
+  --border: #d4cfc4;
+  --accent: #e8401c;
+  --accent2: #1a6b3c;
+  --accent3: #1c4fe8;
+  --muted: #8a8578;
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Clash Display', 'Syne', sans-serif;
+  --radius: 3px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--mono);
+  overflow-x: hidden;
+  font-size: 14px;
+}
+
+/* ── NAV ── */
+nav {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--ink);
+  padding: 0 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px;
+}
+.nav-logo { font-family: var(--mono); font-size: 12px; color: #f5f2eb; letter-spacing: .15em; }
+.nav-logo span { color: #f5a623; }
+.nav-links { display: flex; gap: 0; }
+.nav-links a {
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: #8a8578; text-decoration: none; padding: 0 18px; height: 52px;
+  display: flex; align-items: center; border-left: 1px solid #2a2a22;
+  transition: color .15s, background .15s;
+}
+.nav-links a:hover { color: #f5f2eb; background: #2a2a22; }
+
+/* ── HERO ── */
+.hero {
+  padding: 80px 40px 60px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  max-width: 1300px; margin: 0 auto;
+  border-bottom: 1px solid var(--border);
+}
+.hero-left {}
+.hero-eyebrow {
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent2); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 10px;
+}
+.hero-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--accent2); }
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 100px);
+  font-weight: 700; line-height: .9; letter-spacing: -.02em;
+  margin-bottom: 28px;
+}
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-sub { font-size: 13px; color: var(--muted); line-height: 1.9; max-width: 400px; margin-bottom: 36px; }
+.hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 12px 24px; border: none; cursor: pointer; text-decoration: none; display: inline-block;
+  transition: all .15s;
+}
+.btn-dark { background: var(--ink); color: var(--bg); }
+.btn-dark:hover { background: var(--accent); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--ink); }
+
+.hero-right {
+  background: var(--ink);
+  padding: 24px;
+  font-size: 12px; line-height: 1.8;
+  color: #8a8578;
+  border-radius: var(--radius);
+  position: relative; overflow: hidden;
+}
+.hero-right::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--accent3), var(--accent2));
+}
+.code-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding-bottom: 16px;
+  border-bottom: 1px solid #2a2a22;
+}
+.code-dot { width: 8px; height: 8px; border-radius: 50%; }
+.code-dot:nth-child(1) { background: #ff5f57; }
+.code-dot:nth-child(2) { background: #febc2e; }
+.code-dot:nth-child(3) { background: #28c840; }
+.code-file { margin-left: auto; font-size: 10px; color: #4a4a42; letter-spacing: .1em; }
+.code-line { display: block; }
+.c-kw { color: #e06c75; }
+.c-fn { color: #61afef; }
+.c-str { color: #98c379; }
+.c-cm { color: #5c6370; font-style: italic; }
+.c-num { color: #d19a66; }
+
+.hero-stats {
+  display: flex; gap: 32px; margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--border);
+}
+.stat-item { }
+.stat-n { font-family: var(--display); font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; }
+.stat-l { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+
+/* ── SECTION WRAPPER ── */
+.section-wrap { max-width: 1300px; margin: 0 auto; padding: 80px 40px; }
+.section-header { margin-bottom: 48px; }
+.section-eyebrow {
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
+.section-title {
+  font-family: var(--display); font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700; letter-spacing: -.02em; line-height: 1.05;
+}
+
+/* ── INSTALL COLLAPSIBLE ── */
+.install-block {
+  border: 1px solid var(--border); margin-bottom: 60px; border-radius: var(--radius);
+}
+.install-toggle {
+  width: 100%; background: var(--surface); border: none; cursor: pointer;
+  padding: 18px 24px; display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono); font-size: 12px; color: var(--ink); letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.install-toggle:hover { background: var(--border); }
+.install-arrow { transition: transform .25s; font-size: 16px; }
+.install-arrow.open { transform: rotate(180deg); }
+.install-body { display: none; padding: 32px; background: var(--card); }
+.install-body.open { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.install-step { }
+.install-step-num {
+  font-size: 11px; letter-spacing: .15em; color: var(--accent); text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.install-step-title { font-family: var(--display); font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+.install-step-desc { font-size: 12px; color: var(--muted); line-height: 1.7; }
+.code-snippet {
+  background: var(--ink); color: #98c379; font-family: var(--mono);
+  font-size: 12px; padding: 10px 14px; border-radius: var(--radius);
+  margin-top: 10px; display: block; letter-spacing: .05em;
+}
+@media (max-width:768px) { .install-body.open { grid-template-columns: 1fr; } }
+
+/* ── MODULE TABS ── */
+.module-tabs {
+  display: flex; gap: 0; border-bottom: 2px solid var(--border);
+  margin-bottom: 48px; overflow-x: auto;
+}
+.module-tab {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 14px 24px; border: none; background: transparent; cursor: pointer; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap;
+  transition: color .15s;
+}
+.module-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+.module-tab:hover:not(.active) { color: var(--ink); }
+
+.module-panel { display: none; }
+.module-panel.active { display: block; }
+
+/* ── CAROUSEL ── */
+.carousel-wrap { position: relative; }
+.carousel-track-outer { overflow: hidden; }
+.carousel-track {
+  display: flex; gap: 20px;
+  transition: transform .4s cubic-bezier(.4,.2,.2,1);
+}
+.carousel-card {
+  min-width: 320px; flex: 0 0 320px;
+  background: var(--card); border: 1px solid var(--border);
+  padding: 36px 32px; border-radius: var(--radius);
+  position: relative; overflow: hidden;
+}
+.carousel-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.carousel-card.type-concept::before { background: var(--accent3); }
+.carousel-card.type-relation::before { background: var(--accent2); }
+.carousel-card.type-key::before { background: var(--accent); }
+.carousel-card.type-layer::before { background: #9b59b6; }
+.carousel-card.type-sql::before { background: var(--accent3); }
+
+.card-badge {
+  font-size: 9px; letter-spacing: .15em; text-transform: uppercase; font-weight: 600;
+  padding: 3px 8px; border-radius: 2px; display: inline-block; margin-bottom: 16px;
+}
+.badge-concept { background: rgba(28,79,232,.1); color: var(--accent3); }
+.badge-relation { background: rgba(26,107,60,.1); color: var(--accent2); }
+.badge-key { background: rgba(232,64,28,.1); color: var(--accent); }
+.badge-layer { background: rgba(155,89,182,.1); color: #9b59b6; }
+.badge-sql { background: rgba(28,79,232,.1); color: var(--accent3); }
+
+.card-num { font-size: 11px; color: var(--muted); margin-bottom: 10px; letter-spacing: .08em; }
+.card-title { font-family: var(--display); font-size: 20px; font-weight: 700; margin-bottom: 14px; line-height: 1.2; }
+.card-title .kw { color: var(--accent); font-family: var(--mono); font-size: 16px; }
+.card-body { font-size: 12px; color: var(--muted); line-height: 1.85; }
+.card-body code {
+  background: var(--surface); padding: 1px 5px; border-radius: 2px;
+  color: var(--accent3); font-size: 11px;
+}
+.card-example {
+  margin-top: 16px; padding: 12px 14px;
+  background: var(--ink); color: #98c379; font-family: var(--mono);
+  font-size: 11px; line-height: 1.6; border-radius: var(--radius);
+}
+
+.carousel-nav {
+  display: flex; align-items: center; gap: 16px; margin-top: 24px;
+}
+.carousel-btn {
+  width: 36px; height: 36px; border: 1px solid var(--border); background: var(--card);
+  cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; border-radius: var(--radius);
+}
+.carousel-btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.carousel-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.carousel-counter { font-size: 11px; color: var(--muted); letter-spacing: .1em; }
+.carousel-dots { display: flex; gap: 6px; margin-left: auto; }
+.carousel-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: background .2s; }
+.carousel-dot.active { background: var(--accent); }
+
+/* ── MODULE FLASHCARDS ── */
+.module-flashcards { margin-top: 48px; border-top: 1px solid var(--border); padding-top: 40px; }
+.fc-section-label {
+  font-size: 11px; letter-spacing: .15em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+}
+.fc-section-label::before { content: ''; width: 16px; height: 1px; background: var(--muted); }
+
+.fc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 900px) { .fc-grid { grid-template-columns: 1fr; } }
+
+.fc-mini {
+  border: 1px solid var(--border); background: var(--card); border-radius: var(--radius);
+  cursor: pointer; perspective: 800px;
+  min-height: 180px; position: relative;
+}
+.fc-mini-inner {
+  width: 100%; height: 100%; min-height: 180px;
+  position: relative; transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.4,.2,.2,1);
+}
+.fc-mini.flipped .fc-mini-inner { transform: rotateY(180deg); }
+.fc-mini-front, .fc-mini-back {
+  position: absolute; inset: 0; padding: 24px;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 180px;
+}
+.fc-mini-back { transform: rotateY(180deg); background: var(--ink); color: var(--bg); border-radius: var(--radius); }
+.fc-mini-q { font-size: 13px; font-weight: 600; line-height: 1.5; color: var(--ink); flex: 1; }
+.fc-mini-a { font-size: 12px; line-height: 1.7; color: #c8c4bb; flex: 1; }
+.fc-mini-a code { color: #98c379; background: rgba(255,255,255,.08); padding: 1px 4px; border-radius: 2px; font-size: 11px; }
+.fc-mini-hint { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 12px; }
+.fc-mini-hint-back { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: #5c5c52; margin-top: 12px; }
+.fc-mini-mark {
+  display: flex; gap: 8px; margin-top: 14px;
+}
+.fc-btn-ok, .fc-btn-no {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 6px 12px; border: none; cursor: pointer; border-radius: 2px; flex: 1; transition: all .15s;
+}
+.fc-btn-ok { background: rgba(26,107,60,.15); color: var(--accent2); }
+.fc-btn-ok:hover { background: rgba(26,107,60,.3); }
+.fc-btn-no { background: rgba(232,64,28,.12); color: var(--accent); }
+.fc-btn-no:hover { background: rgba(232,64,28,.25); }
+
+.fc-mini.marked-ok { border-color: var(--accent2); }
+.fc-mini.marked-no { border-color: var(--accent); }
+
+/* ── SQL EDITOR ── */
+#editor-section { background: var(--ink); }
+.editor-wrap { max-width: 1300px; margin: 0 auto; padding: 80px 40px; }
+.editor-header { margin-bottom: 40px; }
+.editor-eyebrow { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent3); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.editor-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--accent3); }
+.editor-title { font-family: var(--display); font-size: clamp(28px, 4vw, 44px); font-weight: 700; letter-spacing: -.02em; color: #f5f2eb; line-height: 1.05; }
+.editor-subtitle { font-size: 12px; color: #5c5c52; margin-top: 10px; }
+
+.editor-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+@media (max-width: 900px) { .editor-layout { grid-template-columns: 1fr; } }
+
+/* Sidebar */
+.editor-sidebar {}
+.sidebar-label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: #5c5c52; margin-bottom: 12px; }
+.schema-box { background: #111108; border: 1px solid #2a2a22; border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+.schema-table { margin-bottom: 12px; }
+.schema-table:last-child { margin-bottom: 0; }
+.schema-table-name { font-size: 11px; color: #e06c75; font-weight: 600; margin-bottom: 6px; letter-spacing: .05em; }
+.schema-col { font-size: 10px; color: #5c5c52; padding-left: 12px; line-height: 1.8; }
+.schema-col .pk { color: #f5a623; font-size: 9px; }
+.schema-col .fk { color: #61afef; font-size: 9px; }
+
+.practice-list { display: flex; flex-direction: column; gap: 6px; }
+.practice-btn {
+  font-family: var(--mono); font-size: 11px; text-align: left; padding: 10px 14px;
+  background: #111108; border: 1px solid #2a2a22; color: #5c5c52; cursor: pointer;
+  border-radius: var(--radius); transition: all .15s; line-height: 1.5;
+}
+.practice-btn:hover { background: #1c1c14; color: #c8c4bb; border-color: var(--accent3); }
+
+/* Editor main */
+.editor-main {}
+.editor-toolbar {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.run-btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 10px 20px; background: var(--accent2); color: #f5f2eb; border: none; cursor: pointer;
+  border-radius: var(--radius); transition: background .15s; display: flex; align-items: center; gap: 8px;
+}
+.run-btn:hover { background: #155c32; }
+.run-btn:disabled { background: #2a2a22; color: #5c5c52; cursor: not-allowed; }
+.clear-btn {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  padding: 10px 16px; background: transparent; color: #5c5c52; border: 1px solid #2a2a22;
+  cursor: pointer; border-radius: var(--radius); transition: all .15s;
+}
+.clear-btn:hover { border-color: var(--accent); color: var(--accent); }
+.editor-status { font-size: 11px; color: #5c5c52; margin-left: auto; }
+
+#sql-input {
+  width: 100%; min-height: 160px; background: #111108; border: 1px solid #2a2a22;
+  color: #abb2bf; font-family: var(--mono); font-size: 13px; line-height: 1.7;
+  padding: 20px; border-radius: var(--radius); resize: vertical; outline: none;
+  transition: border-color .15s;
+  caret-color: var(--accent2);
+}
+#sql-input:focus { border-color: var(--accent3); }
+
+.result-area { margin-top: 16px; }
+.result-label { font-size: 10px; letter-spacing: .15em; text-transform: uppercase; color: #5c5c52; margin-bottom: 10px; }
+.result-box {
+  background: #111108; border: 1px solid #2a2a22; border-radius: var(--radius);
+  min-height: 120px; max-height: 360px; overflow: auto;
+}
+.result-box.error { border-color: var(--accent); }
+.result-box.success { border-color: var(--accent2); }
+
+.result-error { padding: 20px; color: var(--accent); font-size: 12px; line-height: 1.7; }
+.result-empty { padding: 40px; text-align: center; color: #2a2a22; font-size: 12px; }
+
+.result-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.result-table th {
+  text-align: left; padding: 10px 14px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: #5c5c52; border-bottom: 1px solid #2a2a22; white-space: nowrap; position: sticky; top: 0;
+  background: #0d0d07;
+}
+.result-table td { padding: 9px 14px; color: #abb2bf; border-bottom: 1px solid #1a1a12; white-space: nowrap; }
+.result-table tr:hover td { background: #1a1a12; }
+.result-count { padding: 10px 14px; font-size: 10px; color: #5c5c52; border-top: 1px solid #2a2a22; text-align: right; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink); border-top: 1px solid #2a2a22;
+  padding: 32px 40px; display: flex; justify-content: space-between; align-items: center;
+}
+footer p { font-size: 11px; color: #4a4a42; letter-spacing: .08em; }
+footer span { color: var(--accent); }
+
+/* ── UTILS ── */
+.divider { border: none; border-top: 1px solid var(--border); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.hero h1 { animation: fadeUp .6s .1s both; }
+.hero-eyebrow { animation: fadeUp .6s 0s both; }
+.hero-sub { animation: fadeUp .6s .2s both; }
+.hero-ctas { animation: fadeUp .6s .3s both; }
+.hero-right { animation: fadeUp .6s .4s both; }
 </style>
 </head>
 <body>
 
+<!-- NAV -->
 <nav>
-  <div class="nav-logo">SQL101 // Taxes Team</div>
-  <ul class="nav-links">
-    <li><a href="#conceptos">Conceptos</a></li>
-    <li><a href="#sql">SQL Básico</a></li>
-    <li><a href="#flashcards">Flashcards</a></li>
-  </ul>
+  <div class="nav-logo">SQL<span>101</span> // Taxes</div>
+  <div class="nav-links">
+    <a href="#modulos">Módulos</a>
+    <a href="#editor-section">Editor SQL</a>
+  </div>
 </nav>
 
 <!-- HERO -->
 <div class="hero">
-  <div class="hero-grid"></div>
-  <div class="hero-tag">DuckDB · EDA · Taxes Team</div>
-  <h1>SQL<br><span class="highlight">101</span></h1>
-  <p class="hero-sub">
-    Consultas exploratorias y validaciones de calidad sobre datos raw del cliente. Rápido, consistente, auditable.
-  </p>
-  <div class="hero-ctas">
-    <a href="#conceptos" class="btn-primary">Empezar →</a>
-    <a href="#flashcards" class="btn-secondary">Ir a Flashcards</a>
+  <div class="hero-left">
+    <div class="hero-eyebrow">DuckDB · EDA · Taxes Team</div>
+    <h1>SQL<br><em>101</em></h1>
+    <p class="hero-sub">Consultas exploratorias y validaciones de calidad sobre datos raw del cliente. Rápido, consistente y auditable.</p>
+    <div class="hero-ctas">
+      <a href="#modulos" class="btn btn-dark">Empezar →</a>
+      <a href="#editor-section" class="btn btn-outline">Editor SQL ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item"><div class="stat-n">5</div><div class="stat-l">Módulos</div></div>
+      <div class="stat-item"><div class="stat-n">15</div><div class="stat-l">Flashcards</div></div>
+      <div class="stat-item"><div class="stat-n">11</div><div class="stat-l">Queries práctica</div></div>
+    </div>
   </div>
-  <div class="hero-stat-row">
-    <div class="hero-stat">
-      <div class="hero-stat-num">4</div>
-      <div class="hero-stat-label">Keywords SQL</div>
+  <div class="hero-right">
+    <div class="code-header">
+      <div class="code-dot"></div><div class="code-dot"></div><div class="code-dot"></div>
+      <div class="code-file">primera_query.sql</div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">3</div>
-      <div class="hero-stat-label">Tipos de Relación</div>
+    <code class="code-line"><span class="c-cm">-- ¿Cuántos doctores por especialidad?</span></code>
+    <code class="code-line">&nbsp;</code>
+    <code class="code-line"><span class="c-kw">SELECT</span></code>
+    <code class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="c-fn">COUNT</span>(*) <span class="c-kw">AS</span> total,</code>
+    <code class="code-line">&nbsp;&nbsp;&nbsp;&nbsp;specialty</code>
+    <code class="code-line"><span class="c-kw">FROM</span> doctors</code>
+    <code class="code-line"><span class="c-kw">GROUP BY</span> specialty</code>
+    <code class="code-line"><span class="c-kw">ORDER BY</span> total <span class="c-kw">DESC</span>;</code>
+    <code class="code-line">&nbsp;</code>
+    <code class="code-line"><span class="c-cm">-- Resultado: 8 filas ✓</span></code>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="section-wrap" id="modulos">
+
+  <!-- INSTALL -->
+  <div class="install-block">
+    <button class="install-toggle" onclick="toggleInstall(this)">
+      <span>🦆 Setup DuckDB — Instalación y primeros pasos</span>
+      <span class="install-arrow" id="install-arrow">▼</span>
+    </button>
+    <div class="install-body" id="install-body">
+      <div class="install-step">
+        <div class="install-step-num">Paso 01 — Descargar</div>
+        <div class="install-step-title">Instalar DuckDB</div>
+        <div class="install-step-desc">Ir a duckdb.org/install, seleccionar tu Sistema Operativo (Mac / Windows / Linux) e iniciar la descarga.</div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">Paso 02 — Inicializar</div>
+        <div class="install-step-title">Abrir terminal y ejecutar</div>
+        <div class="install-step-desc">En Windows: CMD o PowerShell. En Mac/Linux: Terminal.</div>
+        <code class="code-snippet">duckdb</code>
+        <code class="code-snippet">CALL start_ui();</code>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">Paso 03 — Interfaz</div>
+        <div class="install-step-title">Abrir en navegador</div>
+        <div class="install-step-desc">DuckDB levanta una UI local. Abre tu navegador y navega a la dirección que aparece en la terminal.</div>
+        <code class="code-snippet">http://localhost:4213</code>
+      </div>
     </div>
-    <div class="hero-stat">
-      <div class="hero-stat-num">12</div>
-      <div class="hero-stat-label">Flashcards</div>
+  </div>
+
+  <!-- MODULE TABS -->
+  <div class="section-header">
+    <div class="section-eyebrow">Contenido</div>
+    <div class="section-title">Módulos de aprendizaje</div>
+  </div>
+
+  <div class="module-tabs" id="module-tabs">
+    <button class="module-tab active" onclick="switchTab(this,'tab-fundamentos')">01 · Fundamentos</button>
+    <button class="module-tab" onclick="switchTab(this,'tab-relaciones')">02 · Relaciones</button>
+    <button class="module-tab" onclick="switchTab(this,'tab-llaves')">03 · Llaves & Schema</button>
+    <button class="module-tab" onclick="switchTab(this,'tab-capas')">04 · Capas de Datos</button>
+    <button class="module-tab" onclick="switchTab(this,'tab-sql')">05 · SQL Básico</button>
+  </div>
+
+  <!-- TAB: FUNDAMENTOS -->
+  <div class="module-panel active" id="tab-fundamentos">
+    <div class="carousel-wrap" data-carousel="c-fundamentos">
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="c-fundamentos">
+          <div class="carousel-card type-concept">
+            <div class="card-badge badge-concept">Concepto</div>
+            <div class="card-num">01 / 03</div>
+            <div class="card-title">¿Qué es una <span class="kw">Tabla</span>?</div>
+            <div class="card-body">Un contenedor específico para un solo tipo de entidad de la vida real. Organiza la información en <strong>filas</strong> (registros) y <strong>columnas</strong> (atributos).<br><br>Es el bloque de construcción básico de cualquier base de datos relacional.</div>
+          </div>
+          <div class="carousel-card type-concept">
+            <div class="card-badge badge-concept">Atributos</div>
+            <div class="card-num">02 / 03</div>
+            <div class="card-title">Columnas y <span class="kw">Atributos</span></div>
+            <div class="card-body">Representan las propiedades de lo que guardamos.<br><br><strong>Regla de oro:</strong> todas las filas de una columna deben tener el mismo tipo de dato. En <code>fecha_nacimiento</code> no puede haber un nombre.</div>
+          </div>
+          <div class="carousel-card type-concept">
+            <div class="card-badge badge-concept">Registros</div>
+            <div class="card-num">03 / 03</div>
+            <div class="card-title">Filas y <span class="kw">Registros</span></div>
+            <div class="card-body">Cada fila es un objeto individual y único.<br><br>Si la tabla es de Doctores → cada fila es un doctor.<br>Si la tabla es de Citas → cada fila es una consulta médica concreta.</div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev('c-fundamentos')">←</button>
+        <span class="carousel-counter" id="c-fundamentos-counter">1 / 3</span>
+        <button class="carousel-btn" onclick="carouselNext('c-fundamentos')">→</button>
+        <div class="carousel-dots" id="c-fundamentos-dots"></div>
+      </div>
+    </div>
+
+    <div class="module-flashcards">
+      <div class="fc-section-label">Flashcards · Módulo 01</div>
+      <div class="fc-grid">
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Qué es una tabla en una base de datos relacional?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Contenedor para un solo tipo de entidad, organizado en filas y columnas. El bloque base de cualquier base de datos relacional.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Cuál es la regla de oro de los atributos (columnas)?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Todas las filas de una misma columna deben tener el mismo tipo de dato. No puedes mezclar, por ej., nombres con fechas en la misma columna.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Qué representa cada fila de una tabla?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Un objeto individual y único. En una tabla de Doctores, cada fila es un doctor específico. En Citas, cada fila es una consulta médica concreta.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RELACIONES -->
+  <div class="module-panel" id="tab-relaciones">
+    <div class="carousel-wrap" data-carousel="c-relaciones">
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="c-relaciones">
+          <div class="carousel-card type-relation">
+            <div class="card-badge badge-relation">1:1</div>
+            <div class="card-num">01 / 03</div>
+            <div class="card-title">Relación <span class="kw">Uno a Uno</span></div>
+            <div class="card-body">Un registro de la Tabla A ↔ solo uno de la Tabla B.<br><br><strong>Ej:</strong> Paciente y su Expediente Clínico.<br><br>Ambas tablas suelen compartir la misma Primary Key.</div>
+          </div>
+          <div class="carousel-card type-relation">
+            <div class="card-badge badge-relation">1:N · la más común</div>
+            <div class="card-num">02 / 03</div>
+            <div class="card-title">Relación <span class="kw">Uno a Muchos</span></div>
+            <div class="card-body">Un registro de A → muchos de B. Pero cada B pertenece a un solo A.<br><br><strong>Ej:</strong> Hospital → Doctores.<br><br>La PK del Hospital se guarda como FK en la tabla Doctores.</div>
+          </div>
+          <div class="carousel-card type-relation">
+            <div class="card-badge badge-relation">N:N</div>
+            <div class="card-num">03 / 03</div>
+            <div class="card-title">Relación <span class="kw">Muchos a Muchos</span></div>
+            <div class="card-body">Múltiples registros de A se relacionan con múltiples de B.<br><br><strong>Problema:</strong> un Paciente tiene muchos Doctores y viceversa.<br><br><strong>Solución:</strong> tabla intermedia <code>Appointments</code> (Join Table).</div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev('c-relaciones')">←</button>
+        <span class="carousel-counter" id="c-relaciones-counter">1 / 3</span>
+        <button class="carousel-btn" onclick="carouselNext('c-relaciones')">→</button>
+        <div class="carousel-dots" id="c-relaciones-dots"></div>
+      </div>
+    </div>
+
+    <div class="module-flashcards">
+      <div class="fc-section-label">Flashcards · Módulo 02</div>
+      <div class="fc-grid">
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Cuál es la relación más común en bases de datos? Da un ejemplo.</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">La relación 1:N (Uno a Muchos). Ejemplo: un Hospital tiene muchos Doctores, pero cada Doctor pertenece a un solo Hospital.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Cómo se implementa en la DB una relación 1:N?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">La Primary Key de la tabla "uno" se guarda como Foreign Key en la tabla "muchos". Ej: <code>hospital_id</code> en la tabla Doctores.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Por qué no podemos usar Foreign Keys directas en una relación N:N?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Porque tendríamos que repetir datos infinitamente en ambas tablas. La solución es una tabla intermedia (Join Table) que conecta los IDs de ambas.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: LLAVES -->
+  <div class="module-panel" id="tab-llaves">
+    <div class="carousel-wrap" data-carousel="c-llaves">
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="c-llaves">
+          <div class="carousel-card type-key">
+            <div class="card-badge badge-key">Primary Key</div>
+            <div class="card-num">01 / 03</div>
+            <div class="card-title"><span class="kw">Llave Primaria</span></div>
+            <div class="card-body">El DNI de cada registro. Garantiza que cada fila sea única.<br><br>• Nunca puede estar vacía (<code>NOT NULL</code>)<br>• No pueden existir dos filas con el mismo valor<br><br><strong>Ej:</strong> <code>paciente_id</code> — dos "Juan Pérez" tendrán IDs distintos.</div>
+          </div>
+          <div class="carousel-card type-key">
+            <div class="card-badge badge-key">Foreign Key</div>
+            <div class="card-num">02 / 03</div>
+            <div class="card-title"><span class="kw">Llave Foránea</span></div>
+            <div class="card-body">Columna que apunta a la PK de otra tabla. Crea un vínculo entre tablas sin duplicar información.<br><br>Es el "ancla" para hacer un <code>JOIN</code>.<br><br><strong>Ej:</strong> <code>hospital_id</code> en Doctores apunta a la tabla Hospitales.</div>
+          </div>
+          <div class="carousel-card type-key">
+            <div class="card-badge badge-key">Schema</div>
+            <div class="card-num">03 / 03</div>
+            <div class="card-title">Database <span class="kw">Schema</span></div>
+            <div class="card-body">La estructura completa de la base de datos.<br><br>• El schema = conjunto de tablas<br>• Cada tabla = conjunto de columnas<br>• Las FK definen las relaciones entre tablas<br><br>El schema es el "mapa" de toda la DB.</div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev('c-llaves')">←</button>
+        <span class="carousel-counter" id="c-llaves-counter">1 / 3</span>
+        <button class="carousel-btn" onclick="carouselNext('c-llaves')">→</button>
+        <div class="carousel-dots" id="c-llaves-dots"></div>
+      </div>
+    </div>
+
+    <div class="module-flashcards">
+      <div class="fc-section-label">Flashcards · Módulo 03</div>
+      <div class="fc-grid">
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Cuáles son las dos reglas absolutas de una Primary Key?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">1) No pueden existir dos filas con el mismo valor (unicidad). 2) Nunca puede estar vacía — siempre <code>NOT NULL</code>.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Para qué sirve una Foreign Key y por qué es clave para los JOINs?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Permite relacionar información entre tablas sin duplicarla. Es el "ancla" del JOIN: le dice a SQL cómo conectar las filas de una tabla con las de otra.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Qué es un Database Schema?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">La estructura completa de la base de datos: el mapa de todas las tablas, sus columnas y las relaciones (FKs) entre ellas.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CAPAS -->
+  <div class="module-panel" id="tab-capas">
+    <div class="carousel-wrap" data-carousel="c-capas">
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="c-capas">
+          <div class="carousel-card type-layer">
+            <div class="card-badge badge-layer">🥉 Bronze</div>
+            <div class="card-num">01 / 03</div>
+            <div class="card-title">Raw Tables — <span class="kw">Capa Bronze</span></div>
+            <div class="card-body">Punto de entrada. Los datos se guardan <strong>tal cual vienen</strong> de la fuente (APIs, CSVs, DBs transaccionales).<br><br>• Estado: inalterado. Errores y formatos extraños incluidos.<br>• Propósito: respaldo histórico. La "verdad original".</div>
+          </div>
+          <div class="carousel-card type-layer">
+            <div class="card-badge badge-layer">🥈 Silver</div>
+            <div class="card-num">02 / 03</div>
+            <div class="card-title">Business Objects — <span class="kw">Capa Silver</span></div>
+            <div class="card-body">Aquí ocurre la limpieza. Datos transformados para que tengan sentido para el negocio.<br><br>• Limpio, tipado, sin duplicados, fechas estandarizadas.<br>• Propósito: "versión única de la verdad".<br>• Tablas: <code>Invoices</code>, <code>Items</code>, <code>TaxData</code>.</div>
+          </div>
+          <div class="carousel-card type-layer">
+            <div class="card-badge badge-layer">🥇 Gold</div>
+            <div class="card-num">03 / 03</div>
+            <div class="card-title">Report Tables — <span class="kw">Capa Gold</span></div>
+            <div class="card-body">Capa final, optimizada para dashboards y reportes (Power BI, Tableau).<br><br>• Datos altamente agregados y procesados.<br>• Los cálculos ya están hechos: <code>ventas_mensuales_por_region</code>.<br>• Fácil de leer sin SQL avanzado.</div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev('c-capas')">←</button>
+        <span class="carousel-counter" id="c-capas-counter">1 / 3</span>
+        <button class="carousel-btn" onclick="carouselNext('c-capas')">→</button>
+        <div class="carousel-dots" id="c-capas-dots"></div>
+      </div>
+    </div>
+
+    <div class="module-flashcards">
+      <div class="fc-section-label">Flashcards · Módulo 04</div>
+      <div class="fc-grid">
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Por qué existe la capa Bronze si los datos están "sucios"?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Sirve como respaldo histórico de la "verdad original". Si algo sale mal en el procesamiento posterior, siempre puedes volver a ella sin consultar la fuente externa.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Qué es la "versión única de la verdad" y en qué capa vive?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Es el principio de que todos los analistas usan la misma fuente de datos limpia y estandarizada. Vive en la capa Silver (Business Objects).</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Para qué sirve la capa Gold y quién la consume?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Está optimizada para dashboards y directivos. Los cálculos ya están hechos, así las herramientas de visualización (Power BI, Tableau) no tienen que procesar millones de filas en cada carga.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SQL -->
+  <div class="module-panel" id="tab-sql">
+    <div class="carousel-wrap" data-carousel="c-sql">
+      <div class="carousel-track-outer">
+        <div class="carousel-track" id="c-sql">
+          <div class="carousel-card type-sql">
+            <div class="card-badge badge-sql">SELECT</div>
+            <div class="card-num">01 / 04</div>
+            <div class="card-title"><span class="kw">SELECT</span> — ¿Qué columnas?</div>
+            <div class="card-body">Define qué campos quieres ver. <code>SELECT *</code> trae todo (cuidado con raw grandes). <code>AS</code> renombra la columna en el resultado.
+            <div class="card-example">SELECT first_name, specialty AS esp<br>FROM doctors;</div></div>
+          </div>
+          <div class="carousel-card type-sql">
+            <div class="card-badge badge-sql">FROM</div>
+            <div class="card-num">02 / 04</div>
+            <div class="card-title"><span class="kw">FROM</span> — ¿De dónde?</div>
+            <div class="card-body">Especifica la tabla o archivo fuente. En DuckDB puedes apuntar directo a un CSV sin importar nada.
+            <div class="card-example">FROM doctors<br>FROM 'data/raw/clientes.csv'</div></div>
+          </div>
+          <div class="carousel-card type-sql">
+            <div class="card-badge badge-sql">WHERE</div>
+            <div class="card-num">03 / 04</div>
+            <div class="card-title"><span class="kw">WHERE</span> — Filtrar filas</div>
+            <div class="card-body">Solo verás registros que pasen esta condición. Operadores: <code>=</code> <code>&lt;&gt;</code> <code>&gt;</code> <code>&lt;</code> <code>LIKE</code> <code>IN</code>
+            <div class="card-example">WHERE age &gt; 30<br>WHERE specialty = 'Psychology'<br>WHERE last_name LIKE 'H%'</div></div>
+          </div>
+          <div class="carousel-card type-sql">
+            <div class="card-badge badge-sql">COUNT · GROUP BY</div>
+            <div class="card-num">04 / 04</div>
+            <div class="card-title"><span class="kw">COUNT</span> + GROUP BY</div>
+            <div class="card-body"><code>COUNT(*)</code> cuenta todas las filas (incluye nulls). <code>COUNT(col)</code> solo donde no es NULL — detecta datos faltantes. <code>GROUP BY</code> agrupa por categoría.
+            <div class="card-example">SELECT COUNT(*) AS total, specialty<br>FROM doctors<br>GROUP BY specialty<br>ORDER BY total DESC;</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="carousel-nav">
+        <button class="carousel-btn" onclick="carouselPrev('c-sql')">←</button>
+        <span class="carousel-counter" id="c-sql-counter">1 / 4</span>
+        <button class="carousel-btn" onclick="carouselNext('c-sql')">→</button>
+        <div class="carousel-dots" id="c-sql-dots"></div>
+      </div>
+    </div>
+
+    <div class="module-flashcards">
+      <div class="fc-section-label">Flashcards · Módulo 05</div>
+      <div class="fc-grid">
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Cuál es la diferencia entre <code>COUNT(*)</code> y <code>COUNT(columna)</code>?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a"><code>COUNT(*)</code> cuenta todas las filas incluyendo nulos. <code>COUNT(columna)</code> solo cuenta donde esa columna no es NULL — ideal para detectar datos faltantes.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Qué ventaja ofrece DuckDB al leer datos raw con FROM?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Puedes hacer <code>FROM 'data/raw/archivo.csv'</code> directamente sin importar el archivo a una base de datos primero. Acelera mucho el EDA inicial.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-mini" onclick="flipMini(this)">
+          <div class="fc-mini-inner">
+            <div class="fc-mini-front">
+              <div class="fc-mini-q">¿Para qué sirve <code>ORDER BY col DESC</code>?</div>
+              <div class="fc-mini-hint">↻ clic para ver respuesta</div>
+            </div>
+            <div class="fc-mini-back">
+              <div class="fc-mini-a">Para ordenar los resultados por una columna de mayor a menor (<code>DESC</code>) o menor a mayor (<code>ASC</code>, que es el default). Muy útil para ver los valores más altos primero.</div>
+              <div class="fc-mini-mark" onclick="event.stopPropagation()">
+                <button class="fc-btn-ok" onclick="markMini(this.closest('.fc-mini'),'ok')">✓ Lo supe</button>
+                <button class="fc-btn-no" onclick="markMini(this.closest('.fc-mini'),'no')">✗ No sabía</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /section-wrap -->
+
+<!-- SQL EDITOR -->
+<div id="editor-section">
+  <div class="editor-wrap">
+    <div class="editor-header">
+      <div class="editor-eyebrow">Módulo 06 · Práctica</div>
+      <div class="editor-title">Editor SQL<br><span style="color:#5c5c52;font-size:.6em;font-weight:400">SQLite en tu browser — tablas precargadas</span></div>
+    </div>
+
+    <div class="editor-layout">
+      <!-- SIDEBAR -->
+      <div class="editor-sidebar">
+        <div class="sidebar-label">Schema</div>
+        <div class="schema-box">
+          <div class="schema-table">
+            <div class="schema-table-name">doctors</div>
+            <div class="schema-col"><span class="pk">PK</span> doctor_id</div>
+            <div class="schema-col">first_name</div>
+            <div class="schema-col">last_name</div>
+            <div class="schema-col">specialty</div>
+            <div class="schema-col">age</div>
+          </div>
+          <div class="schema-table">
+            <div class="schema-table-name">patients</div>
+            <div class="schema-col"><span class="pk">PK</span> patient_id</div>
+            <div class="schema-col">first_name</div>
+            <div class="schema-col">last_name</div>
+            <div class="schema-col">age</div>
+          </div>
+          <div class="schema-table">
+            <div class="schema-table-name">appointments</div>
+            <div class="schema-col"><span class="pk">PK</span> appointment_id</div>
+            <div class="schema-col"><span class="fk">FK</span> doctor_id</div>
+            <div class="schema-col"><span class="fk">FK</span> patient_id</div>
+            <div class="schema-col">appointment_date</div>
+          </div>
+        </div>
+
+        <div class="sidebar-label" style="margin-top:20px">Queries de práctica</div>
+        <div class="practice-list">
+          <button class="practice-btn" onclick="loadQuery('SELECT * FROM doctors;')">Ver todos los doctores</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT first_name, last_name\nFROM doctors;')">Solo nombre y apellido</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT * FROM doctors WHERE age < 40;')">Doctores menores de 40</button>
+          <button class="practice-btn" onclick="loadQuery(`SELECT * FROM doctors\nWHERE specialty = 'Psychology';`)">Doctores de Psychology</button>
+          <button class="practice-btn" onclick="loadQuery(`SELECT * FROM doctors\nWHERE last_name LIKE 'H%';`)">Apellido empieza con H</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT * FROM doctors\nORDER BY last_name DESC;')">Ordenar por apellido</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT COUNT(*) AS total\nFROM doctors;')">Contar todos los doctores</button>
+          <button class="practice-btn" onclick="loadQuery(`SELECT COUNT(*) AS total\nFROM doctors\nWHERE specialty = 'Chemistry';`)">Contar doctores de Chemistry</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT COUNT(*) AS total, specialty\nFROM doctors\nGROUP BY specialty\nORDER BY total DESC;')">Doctores por especialidad</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT * FROM patients;')">Ver todos los pacientes</button>
+          <button class="practice-btn" onclick="loadQuery('SELECT * FROM appointments\nORDER BY appointment_date;')">Ver todas las citas</button>
+        </div>
+      </div>
+
+      <!-- EDITOR MAIN -->
+      <div class="editor-main">
+        <div class="editor-toolbar">
+          <button class="run-btn" id="run-btn" onclick="runQuery()" disabled>
+            ▶ Ejecutar
+          </button>
+          <button class="clear-btn" onclick="clearEditor()">Limpiar</button>
+          <span class="editor-status" id="editor-status">Cargando base de datos...</span>
+        </div>
+
+        <textarea id="sql-input" placeholder="-- Escribe tu query aquí o selecciona un ejemplo →&#10;SELECT * FROM doctors;" spellcheck="false"></textarea>
+
+        <div class="result-area">
+          <div class="result-label">Resultado</div>
+          <div class="result-box" id="result-box">
+            <div class="result-empty">Ejecuta una query para ver los resultados aquí.</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<hr class="divider">
-
-<!-- CONCEPTOS -->
-<section id="conceptos">
-  <div class="section-label">Módulo 01</div>
-  <h2 class="section-title">ABC de<br>Bases de Datos</h2>
-
-  <div class="concepts-grid">
-    <div class="concept-card">
-      <div class="concept-num">01 —</div>
-      <div class="concept-title"><span class="kw">Tabla</span></div>
-      <div class="concept-desc">Contenedor para un solo tipo de entidad (ej: solo Doctores). Organiza la info en filas y columnas. Bloque base de cualquier DB relacional.</div>
-      <span class="concept-tag">estructura</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">02 —</div>
-      <div class="concept-title"><span class="kw">Atributo</span> / Columna</div>
-      <div class="concept-desc">Propiedad de la entidad. Regla de oro: todas las filas de una columna deben tener el mismo tipo de dato.</div>
-      <span class="concept-tag">estructura</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">03 —</div>
-      <div class="concept-title"><span class="kw">Fila</span> / Registro</div>
-      <div class="concept-desc">Cada fila es un objeto individual y único. Si la tabla es de Doctores, cada fila es un doctor específico.</div>
-      <span class="concept-tag">estructura</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">04 —</div>
-      <div class="concept-title"><span class="kw">Primary Key</span></div>
-      <div class="concept-desc">El DNI del registro. Garantiza unicidad por fila. Nunca puede ser NULL. No pueden existir dos filas con el mismo valor.</div>
-      <span class="concept-tag">llave</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">05 —</div>
-      <div class="concept-title"><span class="kw">Foreign Key</span></div>
-      <div class="concept-desc">Columna que apunta a la Primary Key de otra tabla. Permite relacionar info sin duplicarla. Es el "ancla" para hacer JOINs.</div>
-      <span class="concept-tag">llave</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">06 —</div>
-      <div class="concept-title"><span class="kw">Schema</span></div>
-      <div class="concept-desc">La estructura completa de la base de datos: el conjunto de tablas, sus columnas y las relaciones entre ellas.</div>
-      <span class="concept-tag">arquitectura</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">07 —</div>
-      <div class="concept-title">Relación <span class="kw">1:1</span></div>
-      <div class="concept-desc">Un registro de A ↔ un registro de B. Ej: Paciente y su Expediente Clínico. Usualmente comparten Primary Key.</div>
-      <span class="concept-tag">relación</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">08 —</div>
-      <div class="concept-title">Relación <span class="kw">1:N</span></div>
-      <div class="concept-desc">Un registro de A → muchos de B. Ej: Hospital tiene muchos Doctores. La PK del Hospital se guarda como FK en Doctores.</div>
-      <span class="concept-tag">relación · más común</span>
-    </div>
-    <div class="concept-card">
-      <div class="concept-num">09 —</div>
-      <div class="concept-title">Relación <span class="kw">N:N</span></div>
-      <div class="concept-desc">Muchos de A ↔ muchos de B. Se resuelve con una tabla intermedia (Join Table). Ej: Pacientes ↔ Doctores via Appointments.</div>
-      <span class="concept-tag">relación</span>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- SQL CHEATSHEET -->
-<section id="sql">
-  <div class="section-label">Módulo 02</div>
-  <h2 class="section-title">ABC de<br>SQL</h2>
-
-  <div class="cheatsheet">
-    <div class="cheat-header">
-      <div class="dot dot-r"></div>
-      <div class="dot dot-y"></div>
-      <div class="dot dot-g"></div>
-    </div>
-    <div class="cheat-body">
-      <div class="cheat-item">
-        <div class="cheat-kw">SELECT</div>
-        <div class="cheat-question">¿Qué columnas quiero?</div>
-        <div class="cheat-note">Define qué campos te interesan. Usa <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">*</code> para todo (cuidado con raw grandes). Alias con <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">AS</code> para renombrar columnas.</div>
-        <code class="cheat-code">SELECT first_name, specialty AS especialidad</code>
-      </div>
-      <div class="cheat-item">
-        <div class="cheat-kw">FROM</div>
-        <div class="cheat-question">¿De dónde vienen los datos?</div>
-        <div class="cheat-note">Especifica la tabla o archivo. En DuckDB puedes leer CSVs directamente sin importar primero.</div>
-        <code class="cheat-code">FROM 'data/raw/clientes.csv'</code>
-      </div>
-      <div class="cheat-item">
-        <div class="cheat-kw">WHERE</div>
-        <div class="cheat-question">¿Qué filas me interesan?</div>
-        <div class="cheat-note">Es el filtro. Operadores: <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">=  &lt;&gt;  &gt;  &lt;  LIKE  IN</code>. Solo verás registros que pasen esta prueba.</div>
-        <code class="cheat-code">WHERE age &gt; 30 AND specialty = 'Cardio'</code>
-      </div>
-      <div class="cheat-item">
-        <div class="cheat-kw">COUNT()</div>
-        <div class="cheat-question">¿Cuántos registros hay?</div>
-        <div class="cheat-note"><code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">COUNT(*)</code> cuenta todo (incluye nulls). <code style="color:var(--accent3);background:rgba(184,255,87,0.08);padding:2px 5px;border-radius:2px;font-size:11px;">COUNT(col)</code> solo donde no es NULL — útil para detectar datos faltantes.</div>
-        <code class="cheat-code">SELECT COUNT(*), COUNT(email) FROM doctors</code>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- FLASHCARDS -->
-<section id="flashcards" style="max-width:1200px">
-  <div class="section-label">Módulo 03</div>
-  <h2 class="section-title">Flashcards<br><span style="color:var(--accent2);">¿Cuánto sabes?</span></h2>
-
-  <div class="flashcard-controls">
-    <div class="fc-progress">Carta <span id="current-num">1</span> de <span id="total-num">12</span></div>
-    <div class="fc-score">
-      <span class="correct" id="correct-count">0</span> correctas &nbsp;/&nbsp;
-      <span class="incorrect" id="incorrect-count">0</span> incorrectas
-    </div>
-    <button class="btn-reset" onclick="resetCards()">↺ Reiniciar</button>
-  </div>
-
-  <div class="progress-bar-outer">
-    <div class="progress-bar-inner" id="progress-bar" style="width:8.33%"></div>
-  </div>
-
-  <!-- FLASHCARD -->
-  <div class="flashcard-area" id="fc-area">
-    <div class="flashcard" id="flashcard" onclick="flipCard()">
-      <div class="fc-front">
-        <div class="fc-category" id="fc-cat"></div>
-        <div class="fc-question" id="fc-question"></div>
-        <div class="fc-hint">Clic para ver la respuesta</div>
-      </div>
-      <div class="fc-back">
-        <div class="fc-answer-label">RESPUESTA</div>
-        <div class="fc-answer" id="fc-answer"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCORE RESULT -->
-  <div class="score-result" id="score-result">
-    <div class="score-big" id="score-pct">—</div>
-    <div class="score-label" id="score-title">—</div>
-    <div class="score-sub" id="score-sub">—</div>
-    <button class="btn-primary" onclick="resetCards()" style="margin-top:8px">↺ Repetir todo</button>
-  </div>
-
-  <div class="fc-nav" id="fc-nav">
-    <button class="btn-nav" id="btn-prev" onclick="prevCard()">← Anterior</button>
-    <button class="btn-incorrect" id="btn-incorrect" onclick="markCard(false)" style="display:none">✗ No sabía</button>
-    <button class="btn-correct" id="btn-correct" onclick="markCard(true)" style="display:none">✓ Lo supe</button>
-    <button class="btn-nav" id="btn-next" onclick="nextCard()">Siguiente →</button>
-  </div>
-
-  <div class="fc-dots" id="fc-dots"></div>
-</section>
-
-<hr class="divider">
 <footer>
-  <p>SQL101 <span class="footer-accent">// Taxes Team</span></p>
+  <p>SQL<span>101</span> // Taxes Team</p>
   <p>DuckDB · EDA · 2025</p>
 </footer>
 
 <script>
-const cards = [
-  {
-    cat: "Fundamentos",
-    q: "¿Qué es una tabla en una base de datos?",
-    a: "Un contenedor para un solo tipo de entidad, organizado en filas y columnas. Es el bloque básico de cualquier base de datos relacional."
-  },
-  {
-    cat: "Fundamentos",
-    q: "¿Cuál es la regla de oro de las columnas?",
-    a: "Todas las filas de una misma columna deben tener el mismo tipo de dato. No puede haber un nombre en la columna <code>fecha_nacimiento</code>."
-  },
-  {
-    cat: "Fundamentos",
-    q: "¿Qué representa cada fila de una tabla?",
-    a: "Un objeto individual y único. Si la tabla es de Doctores, cada fila es un doctor específico."
-  },
-  {
-    cat: "Llaves",
-    q: "¿Qué es una Primary Key y cuáles son sus reglas?",
-    a: "Es el identificador único de cada registro (como un DNI). Nunca puede haber dos filas con la misma PK y nunca puede ser <code>NULL</code>."
-  },
-  {
-    cat: "Llaves",
-    q: "¿Para qué sirve una Foreign Key?",
-    a: "Crea un vínculo entre dos tablas apuntando a la Primary Key de otra tabla. Permite relacionar información sin duplicarla y es el ancla para hacer <code>JOIN</code>s."
-  },
-  {
-    cat: "Relaciones",
-    q: "Explica una relación 1:N. ¿Cuál es la más común?",
-    a: "Un registro de A puede tener muchos registros en B, pero cada registro de B solo pertenece a uno de A. Ej: Hospital → Doctores. Es la más común. La PK del Hospital va como FK en Doctores."
-  },
-  {
-    cat: "Relaciones",
-    q: "¿Cómo se resuelve una relación N:N?",
-    a: "Con una tabla intermedia (Join Table). Ej: Pacientes y Doctores no pueden tener FK mutuamente, entonces creamos una tabla <code>Appointments</code>."
-  },
-  {
-    cat: "Relaciones",
-    q: "¿Qué caracteriza una relación 1:1?",
-    a: "Un registro de la Tabla A se relaciona con solo uno de la Tabla B. Ej: Paciente y su Expediente Clínico. Generalmente comparten la misma Primary Key."
-  },
-  {
-    cat: "SQL",
-    q: "¿Qué hace <code>SELECT *</code> y cuándo hay que tener cuidado?",
-    a: "Trae todas las columnas de la tabla. Hay que usarlo con cuidado en archivos raw muy grandes porque puede ser costoso en tiempo y memoria."
-  },
-  {
-    cat: "SQL",
-    q: "¿Cómo se renombra una columna en el resultado de una consulta?",
-    a: "Con la palabra clave <code>AS</code>. Ejemplo: <code>SELECT specialty AS especialidad</code> — el alias solo afecta el nombre en el reporte, no la tabla original."
-  },
-  {
-    cat: "SQL",
-    q: "¿Cuál es la diferencia entre <code>COUNT(*)</code> y <code>COUNT(columna)</code>?",
-    a: "<code>COUNT(*)</code> cuenta todas las filas incluyendo nulos (total del dataset). <code>COUNT(columna)</code> solo cuenta filas donde esa columna no es NULL — útil para detectar datos faltantes."
-  },
-  {
-    cat: "DuckDB",
-    q: "¿Qué ventaja ofrece DuckDB con archivos CSV para EDA?",
-    a: "Puedes usar <code>FROM 'data/raw/clientes.csv'</code> directamente sin importar el archivo a una base de datos primero, lo que acelera mucho la exploración de datos raw del cliente."
-  }
-];
+// ── CAROUSEL ──
+const carouselState = {};
 
-let current = 0;
-let flipped = false;
-let results = new Array(cards.length).fill(null); // null = no vista, true = correcta, false = incorrecta
-
-function renderDots() {
-  const dots = document.getElementById('fc-dots');
-  dots.innerHTML = '';
-  cards.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'fc-dot';
-    if (i === current) d.classList.add('active');
-    if (results[i] === true) d.classList.add('correct');
-    if (results[i] === false) d.classList.add('incorrect');
-    dots.appendChild(d);
+function initCarousels() {
+  document.querySelectorAll('.carousel-track').forEach(track => {
+    const id = track.id;
+    const cards = track.querySelectorAll('.carousel-card');
+    carouselState[id] = { current: 0, total: cards.length, cardWidth: 320 + 20 };
+    buildDots(id, cards.length);
+    updateCarousel(id);
   });
 }
 
-function loadCard(idx) {
-  const card = cards[idx];
-  document.getElementById('fc-cat').textContent = card.cat;
-  document.getElementById('fc-question').innerHTML = card.q;
-  document.getElementById('fc-answer').innerHTML = card.a;
-
-  // Reset flip
-  const fc = document.getElementById('flashcard');
-  fc.classList.remove('flipped');
-  flipped = false;
-
-  // Update controls
-  document.getElementById('current-num').textContent = idx + 1;
-  document.getElementById('total-num').textContent = cards.length;
-
-  document.getElementById('btn-prev').disabled = idx === 0;
-  document.getElementById('btn-incorrect').style.display = 'none';
-  document.getElementById('btn-correct').style.display = 'none';
-
-  // Progress bar
-  const pct = ((idx + 1) / cards.length) * 100;
-  document.getElementById('progress-bar').style.width = pct + '%';
-
-  renderDots();
-  updateScore();
-}
-
-function flipCard() {
-  const fc = document.getElementById('flashcard');
-  if (!flipped) {
-    fc.classList.add('flipped');
-    flipped = true;
-    document.getElementById('btn-incorrect').style.display = 'inline-block';
-    document.getElementById('btn-correct').style.display = 'inline-block';
-  } else {
-    fc.classList.remove('flipped');
-    flipped = false;
-    document.getElementById('btn-incorrect').style.display = 'none';
-    document.getElementById('btn-correct').style.display = 'none';
+function buildDots(id, n) {
+  const dots = document.getElementById(id + '-dots');
+  if (!dots) return;
+  dots.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const d = document.createElement('div');
+    d.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+    dots.appendChild(d);
   }
 }
 
-function nextCard() {
-  if (current < cards.length - 1) {
-    current++;
-    loadCard(current);
+function updateCarousel(id) {
+  const s = carouselState[id];
+  const track = document.getElementById(id);
+  track.style.transform = `translateX(-${s.current * s.cardWidth}px)`;
+  document.getElementById(id + '-counter').textContent = `${s.current + 1} / ${s.total}`;
+  const dots = document.getElementById(id + '-dots');
+  if (dots) dots.querySelectorAll('.carousel-dot').forEach((d, i) => {
+    d.classList.toggle('active', i === s.current);
+  });
+}
+
+function carouselNext(id) {
+  const s = carouselState[id];
+  if (s.current < s.total - 1) { s.current++; updateCarousel(id); }
+}
+
+function carouselPrev(id) {
+  const s = carouselState[id];
+  if (s.current > 0) { s.current--; updateCarousel(id); }
+}
+
+// ── TABS ──
+function switchTab(btn, panelId) {
+  document.querySelectorAll('.module-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.module-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+// ── INSTALL TOGGLE ──
+function toggleInstall(btn) {
+  const body = document.getElementById('install-body');
+  const arrow = document.getElementById('install-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+// ── FLASHCARDS MINI ──
+function flipMini(card) {
+  card.classList.toggle('flipped');
+}
+
+function markMini(card, result) {
+  card.classList.remove('marked-ok', 'marked-no');
+  card.classList.add(result === 'ok' ? 'marked-ok' : 'marked-no');
+  // auto-flip back
+  setTimeout(() => { card.classList.remove('flipped'); }, 600);
+}
+
+// ── SQL EDITOR ──
+let db = null;
+
+async function initDB() {
+  try {
+    const SQL = await initSqlJs({
+      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.2/${file}`
+    });
+    db = new SQL.Database();
+
+    db.run(`
+      CREATE TABLE doctors (
+        doctor_id INTEGER PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        specialty TEXT,
+        age INTEGER
+      );
+      CREATE TABLE patients (
+        patient_id INTEGER PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        age INTEGER
+      );
+      CREATE TABLE appointments (
+        appointment_id INTEGER PRIMARY KEY,
+        doctor_id INTEGER,
+        patient_id INTEGER,
+        appointment_date TEXT NOT NULL,
+        FOREIGN KEY (doctor_id) REFERENCES doctors(doctor_id),
+        FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+      );
+    `);
+
+    db.run(`INSERT INTO doctors VALUES
+      (1,'Gregory','House','Diagnostics',55),
+      (2,'Andrew','Huberman','Psychology',48),
+      (3,'Walter','White','Chemistry',52),
+      (4,'Jane','Foster','Astrophysics',35),
+      (5,'Meredith','Grey','General Surgery',42),
+      (6,'Joe','Wilson','General Surgery',41),
+      (7,'Carina','Deluca','Obstetrician',38),
+      (8,'Sigmund','Freud','Psychology',62);
+    `);
+
+    db.run(`INSERT INTO patients VALUES
+      (1,'Juan','Pérez',34),(2,'María','Cano',28),(3,'Roberto','Gómez',45),
+      (4,'Ana','Ruiz',12),(5,'Luis','Torres',67),(6,'Elena','Vázquez',31),
+      (7,'Pedro','Jiménez',52),(8,'Carmen','Ortiz',19),(9,'Diego','Castro',8),
+      (10,'Isabel','Ríos',40);
+    `);
+
+    db.run(`INSERT INTO appointments VALUES
+      (1,1,1,'2026-03-10 09:00'),(2,2,2,'2026-03-10 10:00'),(3,3,3,'2026-03-10 11:00'),
+      (4,4,4,'2026-03-11 09:30'),(5,5,5,'2026-03-11 10:30'),(6,1,6,'2026-03-11 11:30'),
+      (7,2,7,'2026-03-12 08:00'),(8,3,8,'2026-03-12 09:00'),(9,4,9,'2026-03-12 10:00'),
+      (10,5,10,'2026-03-12 11:00'),(11,1,2,'2026-03-13 09:00'),(12,2,4,'2026-03-13 10:00'),
+      (13,3,6,'2026-03-13 11:00'),(14,4,8,'2026-03-14 09:30'),(15,5,1,'2026-03-14 10:30'),
+      (16,1,3,'2026-03-14 11:30'),(17,2,5,'2026-03-15 08:00'),(18,3,7,'2026-03-15 09:00'),
+      (19,4,9,'2026-03-15 10:00'),(20,5,2,'2026-03-15 11:00'),(21,1,4,'2026-03-16 09:00'),
+      (22,7,6,'2026-03-16 10:00'),(23,3,8,'2026-03-16 11:00'),(24,4,10,'2026-03-17 09:30'),
+      (25,8,3,'2026-03-17 10:30'),(26,1,5,'2026-03-17 11:30'),(27,2,7,'2026-03-18 08:00'),
+      (28,4,1,'2026-03-18 10:00'),(29,5,6,'2026-03-18 11:00'),(30,6,9,'2026-03-18 09:00');
+    `);
+
+    document.getElementById('editor-status').textContent = '✓ Base de datos lista';
+    document.getElementById('editor-status').style.color = '#1a6b3c';
+    document.getElementById('run-btn').disabled = false;
+  } catch (e) {
+    document.getElementById('editor-status').textContent = '✗ Error al cargar DB';
+    document.getElementById('editor-status').style.color = '#e8401c';
+    console.error(e);
   }
 }
 
-function prevCard() {
-  if (current > 0) {
-    current--;
-    loadCard(current);
+function runQuery() {
+  if (!db) return;
+  const sql = document.getElementById('sql-input').value.trim();
+  if (!sql) return;
+
+  const resultBox = document.getElementById('result-box');
+  resultBox.className = 'result-box';
+
+  try {
+    const results = db.exec(sql);
+    if (!results.length) {
+      resultBox.classList.add('success');
+      resultBox.innerHTML = '<div class="result-empty" style="color:#1a6b3c">Query ejecutada correctamente. Sin filas que mostrar.</div>';
+      return;
+    }
+
+    const { columns, values } = results[0];
+    let html = '<table class="result-table"><thead><tr>';
+    columns.forEach(c => { html += `<th>${c}</th>`; });
+    html += '</tr></thead><tbody>';
+    values.forEach(row => {
+      html += '<tr>';
+      row.forEach(v => { html += `<td>${v === null ? '<span style="color:#4a4a42">NULL</span>' : v}</td>`; });
+      html += '</tr>';
+    });
+    html += `</tbody></table><div class="result-count">${values.length} fila${values.length !== 1 ? 's' : ''}</div>`;
+
+    resultBox.classList.add('success');
+    resultBox.innerHTML = html;
+  } catch (e) {
+    resultBox.classList.add('error');
+    resultBox.innerHTML = `<div class="result-error">✗ Error: ${e.message}</div>`;
   }
 }
 
-function markCard(correct) {
-  results[current] = correct;
-  renderDots();
-  updateScore();
-
-  const answered = results.filter(r => r !== null).length;
-  if (answered === cards.length) {
-    showResult();
-    return;
-  }
-
-  if (current < cards.length - 1) {
-    setTimeout(() => { current++; loadCard(current); }, 300);
-  }
+function loadQuery(q) {
+  document.getElementById('sql-input').value = q;
+  document.getElementById('sql-input').focus();
+  document.getElementById('editor-section').scrollIntoView({ behavior: 'smooth' });
 }
 
-function updateScore() {
-  const correct = results.filter(r => r === true).length;
-  const incorrect = results.filter(r => r === false).length;
-  document.getElementById('correct-count').textContent = correct;
-  document.getElementById('incorrect-count').textContent = incorrect;
+function clearEditor() {
+  document.getElementById('sql-input').value = '';
+  document.getElementById('result-box').className = 'result-box';
+  document.getElementById('result-box').innerHTML = '<div class="result-empty">Ejecuta una query para ver los resultados aquí.</div>';
 }
 
-function showResult() {
-  document.getElementById('fc-area').style.display = 'none';
-  document.getElementById('fc-nav').style.display = 'none';
-  document.getElementById('fc-dots').style.display = 'none';
+// Ctrl+Enter to run
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') runQuery();
+});
 
-  const correct = results.filter(r => r === true).length;
-  const pct = Math.round((correct / cards.length) * 100);
-
-  let title, sub;
-  if (pct === 100) { title = '¡Perfecto! 🎯'; sub = 'Dominas todos los conceptos. El equipo de Taxes está en buenas manos.'; }
-  else if (pct >= 75) { title = '¡Muy bien! 💪'; sub = 'Sólido conocimiento. Repasa las que fallaste y las tendrás dominadas.'; }
-  else if (pct >= 50) { title = 'Buen avance 📈'; sub = 'Tienes la base. Vale la pena releer el material y volver a intentarlo.'; }
-  else { title = 'Sigue practicando 🔁'; sub = 'No te rajes. Repasa el módulo y dale otra vuelta a las flashcards.'; }
-
-  document.getElementById('score-pct').textContent = pct + '%';
-  document.getElementById('score-title').textContent = title;
-  document.getElementById('score-sub').textContent = sub;
-  document.getElementById('score-result').classList.add('visible');
-}
-
-function resetCards() {
-  results = new Array(cards.length).fill(null);
-  current = 0;
-
-  document.getElementById('fc-area').style.display = 'block';
-  document.getElementById('fc-nav').style.display = 'flex';
-  document.getElementById('fc-dots').style.display = 'flex';
-  document.getElementById('score-result').classList.remove('visible');
-
-  loadCard(0);
-}
-
-// Init
-loadCard(0);
+// ── INIT ──
+initCarousels();
+initDB();
 </script>
 </body>
 </html>
